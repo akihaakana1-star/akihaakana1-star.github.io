@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Retro Pong</title>
+<title>PinKiPonKi</title>
 <style>
 * { box-sizing: border-box; }
 
@@ -99,7 +99,7 @@ button:hover {
 <body>
 
 <div class="game">
-  <h1>RETRO PONG</h1>
+  <h1>PinKiPonKi</h1>
 
   <div class="score">
     <span>YOU: <b id="playerScore">0</b></span>
@@ -110,22 +110,22 @@ button:hover {
     <canvas id="canvas" width="800" height="450"></canvas>
 
     <div class="overlay" id="menu">
-      <h2>RETRO PONG</h2>
-      <p>FIRST TO 5 WINS</p>
-      <button id="startBtn">START GAME</button>
+      <h2>PinKiPonKi</h2>
+      <p>5 PISTETTÄ VOITTOON</p>
+      <button id="startBtn">ALOITA PELI</button>
     </div>
 
     <div class="overlay hidden" id="endMenu">
-      <h2 id="result">GAME OVER</h2>
-      <button id="restartBtn">PLAY AGAIN</button>
+      <h2 id="result">HÄVISIT PELIN</h2>
+      <button id="restartBtn">PELAA UUDESTAAN</button>
     </div>
   </div>
 
   <p class="info">
-    MOVE: W / S OR ↑ / ↓<br>
-    YOU CAN ALSO USE YOUR MOUSE OR FINGER
+    Liikuta mailaa: W / S<br>
+    Voit myös käyttää hiiträ tai sormea liikuttamiseen
   </p>
-  <button id="resetBtn">RESTART</button>
+  <button id="resetBtn">UUDELLEEN</button>
 </div>
 
 <script>
