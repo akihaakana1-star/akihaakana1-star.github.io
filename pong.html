@@ -62,12 +62,10 @@ button {
   cursor: pointer;
 }
 
-button:hover {
-  background: white;
-}
+button:hover { background: white; }
 
 .info {
-  color: #9bffaF;
+  color: #9bffaf;
   font-size: 13px;
   line-height: 1.7;
 }
@@ -93,7 +91,6 @@ button:hover {
 }
 
 .hidden { display: none; }
-
 </style>
 </head>
 <body>
@@ -102,8 +99,8 @@ button:hover {
   <h1>PinKiPonKi</h1>
 
   <div class="score">
-    <span>SINÄ: <b id="playerScore">0</b></span>
-    <span>KARI: <b id="cpuScore">0</b></span>
+    <span>YOU: <b id="playerScore">0</b></span>
+    <span>CPU: <b id="cpuScore">0</b></span>
   </div>
 
   <div class="arena">
@@ -112,11 +109,12 @@ button:hover {
     <div class="overlay" id="menu">
       <h2>PinKiPonKi</h2>
       <p>EKA KELLÄ ON 5 VOITTAA!</p>
+      <p>VAROITUS! KARI ON ELÄIN TÄSSÄ PELISSÄ!</p>
       <button id="startBtn">HAASTA KARI</button>
     </div>
 
     <div class="overlay hidden" id="endMenu">
-      <h2 id="result">HÄVISIT PELIN</h2>
+      <h2 id="result">KARI VOITTI :(</h2>
       <button id="restartBtn">PELAA UUDESTAAN</button>
     </div>
   </div>
@@ -135,8 +133,18 @@ const ctx = canvas.getContext("2d");
 const W = canvas.width;
 const H = canvas.height;
 
-const player = { x: 25, y: 180, w: 13, h: 90, score: 0 };
-const cpu = { x: W - 38, y: 180, w: 13, h: 90, score: 0 };
+//VAIKEUSTASO
+const CPU_SPEED = 12;
+const CPU_REACTION = 0;
+const CPU_ERROR = 0;
+
+const player = {
+  x: 25, y: 180, w: 13, h: 90, score: 0
+};
+
+const cpu = {
+  x: W - 38, y: 180, w: 13, h: 90, score: 0
+};
 
 const ball = {
   x: W / 2,
@@ -153,6 +161,7 @@ let keys = {};
 const menu = document.getElementById("menu");
 const endMenu = document.getElementById("endMenu");
 
+// resetoi pallo
 function resetBall(direction = 1) {
   ball.x = W / 2;
   ball.y = H / 2;
@@ -163,6 +172,7 @@ function resetBall(direction = 1) {
 function resetGame() {
   player.score = 0;
   cpu.score = 0;
+
   player.y = H / 2 - player.h / 2;
   cpu.y = H / 2 - cpu.h / 2;
 
@@ -175,11 +185,34 @@ function updateScore() {
   document.getElementById("cpuScore").textContent = cpu.score;
 }
 
+// Predict where the ball will arrive at the CPU paddle
+function predictBallY() {
+  if (ball.vx <= 0) {
+    return H / 2;
+  }
+
+  const distance = cpu.x - ball.x;
+  const travelTime = distance / ball.vx;
+
+  let predictedY = ball.y + ball.vy * travelTime;
+
+  // Predict wall bounces
+  const range = H - 2 * ball.r;
+  let position = (predictedY - ball.r) % (2 * range);
+
+  if (position < 0) position += 2 * range;
+
+  if (position > range) {
+    position = 2 * range - position;
+  }
+
+  return position + ball.r;
+}
+
 function draw() {
   ctx.fillStyle = "#000";
   ctx.fillRect(0, 0, W, H);
 
-  // Center line
   ctx.setLineDash([10, 12]);
   ctx.strokeStyle = "#39ff7255";
   ctx.beginPath();
@@ -188,7 +221,6 @@ function draw() {
   ctx.stroke();
   ctx.setLineDash([]);
 
-  // Paddles
   ctx.fillStyle = "#39ff72";
   ctx.shadowColor = "#39ff72";
   ctx.shadowBlur = 12;
@@ -196,9 +228,12 @@ function draw() {
   ctx.fillRect(player.x, player.y, player.w, player.h);
   ctx.fillRect(cpu.x, cpu.y, cpu.w, cpu.h);
 
-  // Ball
-  ctx.fillRect(ball.x - ball.r, ball.y - ball.r,
-               ball.r * 2, ball.r * 2);
+  ctx.fillRect(
+    ball.x - ball.r,
+    ball.y - ball.r,
+    ball.r * 2,
+    ball.r * 2
+  );
 
   ctx.shadowBlur = 0;
 }
@@ -207,27 +242,48 @@ function update() {
   if (!running) return;
 
   // Player movement
-  if (keys["ArrowUp"] || keys["w"]) player.y -= 7;
-  if (keys["ArrowDown"] || keys["s"]) player.y += 7;
+  if (keys["arrowup"] || keys["w"]) player.y -= 7;
+  if (keys["arrowdown"] || keys["s"]) player.y += 7;
 
-  player.y = Math.max(0, Math.min(H - player.h, player.y));
+  player.y = Math.max(
+    0,
+    Math.min(H - player.h, player.y)
+  );
 
-  // AI opponent
-  const target = ball.y - cpu.h / 2;
-  const difficulty = 4.2 + Math.min(cpu.score, 2) * 0.2;
+  // EXTREME CPU AI
+  if (ball.vx > 0) {
+    const target = predictBallY() - cpu.h / 2;
+    const difference = target - cpu.y;
 
-  if (cpu.y + cpu.h / 2 < target - 8) cpu.y += difficulty;
-  if (cpu.y + cpu.h / 2 > target + 8) cpu.y -= difficulty;
+    if (Math.abs(difference) > CPU_REACTION) {
+      cpu.y += Math.sign(difference) *
+        Math.min(Math.abs(difference), CPU_SPEED);
+    }
+  } else {
+    // Return to center while ball moves away
+    const target = H / 2 - cpu.h / 2;
+    const difference = target - cpu.y;
 
-  cpu.y = Math.max(0, Math.min(H - cpu.h, cpu.y));
+    cpu.y += Math.sign(difference) *
+      Math.min(Math.abs(difference), CPU_SPEED);
+  }
+
+  cpu.y = Math.max(
+    0,
+    Math.min(H - cpu.h, cpu.y)
+  );
 
   // Ball movement
   ball.x += ball.vx;
   ball.y += ball.vy;
 
-  // Top and bottom collision
+  // Wall collision
   if (ball.y - ball.r < 0 || ball.y + ball.r > H) {
     ball.vy *= -1;
+    ball.y = Math.max(
+      ball.r,
+      Math.min(H - ball.r, ball.y)
+    );
   }
 
   // Player collision
@@ -239,7 +295,9 @@ function update() {
     ball.y < player.y + player.h
   ) {
     ball.vx = Math.abs(ball.vx) * 1.04;
-    ball.vy += ((ball.y - (player.y + player.h / 2)) / 10);
+    ball.vy += (
+      (ball.y - (player.y + player.h / 2)) / 10
+    );
   }
 
   // CPU collision
@@ -251,7 +309,9 @@ function update() {
     ball.y < cpu.y + cpu.h
   ) {
     ball.vx = -Math.abs(ball.vx) * 1.04;
-    ball.vy += ((ball.y - (cpu.y + cpu.h / 2)) / 10);
+    ball.vy += (
+      (ball.y - (cpu.y + cpu.h / 2)) / 10
+    );
   }
 
   // Scoring
@@ -273,8 +333,10 @@ function pointScored() {
 
   if (player.score >= 5 || cpu.score >= 5) {
     running = false;
+
     document.getElementById("result").textContent =
-      player.score >= 5 ? "VOITIT PELIN" : "KARI VOITTI";
+      player.score >= 5 ? "YOU WIN!" : "CPU WINS!";
+
     endMenu.classList.remove("hidden");
   }
 }
@@ -290,9 +352,12 @@ function loop() {
 
 function startGame() {
   cancelAnimationFrame(animation);
+
   resetGame();
+
   menu.classList.add("hidden");
   endMenu.classList.add("hidden");
+
   running = true;
   loop();
 }
@@ -303,9 +368,11 @@ document.getElementById("resetBtn").onclick = startGame;
 
 document.addEventListener("keydown", e => {
   const key = e.key.toLowerCase();
+
   if (["arrowup", "arrowdown", " "].includes(key)) {
     e.preventDefault();
   }
+
   keys[key] = true;
 });
 
@@ -320,7 +387,10 @@ function movePlayer(e) {
   const scaleY = H / rect.height;
   const y = (e.clientY - rect.top) * scaleY;
 
-  player.y = Math.max(0, Math.min(H - player.h, y - player.h / 2));
+  player.y = Math.max(
+    0,
+    Math.min(H - player.h, y - player.h / 2)
+  );
 }
 
 canvas.addEventListener("pointermove", movePlayer);
