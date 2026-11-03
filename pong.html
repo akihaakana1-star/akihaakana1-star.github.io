@@ -250,28 +250,27 @@ function update() {
     Math.min(H - player.h, player.y)
   );
 
-  // EXTREME CPU AI
-  if (ball.vx > 0) {
-    const target = predictBallY() - cpu.h / 2;
-    const difference = target - cpu.y;
+// HARD CPU AI - NO BALL PREDICTION
 
-    if (Math.abs(difference) > CPU_REACTION) {
-      cpu.y += Math.sign(difference) *
-        Math.min(Math.abs(difference), CPU_SPEED);
-    }
-  } else {
-    // Return to center while ball moves away
-    const target = H / 2 - cpu.h / 2;
-    const difference = target - cpu.y;
+const target = ball.y - cpu.h / 2;
+const difference = target - cpu.y;
 
-    cpu.y += Math.sign(difference) *
-      Math.min(Math.abs(difference), CPU_SPEED);
-  }
+const CPU_SPEED = 6.8;
+const DEAD_ZONE = 13;
 
-  cpu.y = Math.max(
-    0,
-    Math.min(H - cpu.h, cpu.y)
+if (Math.abs(difference) > DEAD_ZONE) {
+  const movement = Math.min(
+    Math.abs(difference),
+    CPU_SPEED
   );
+
+  cpu.y += Math.sign(difference) * movement;
+}
+
+cpu.y = Math.max(
+  0,
+  Math.min(H - cpu.h, cpu.y)
+);
 
   // Ball movement
   ball.x += ball.vx;
