@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Retro Pong</title>
+<title>PinKiPonKi</title>
 <style>
 * { box-sizing: border-box; }
 
@@ -99,11 +99,11 @@ button:hover {
 <body>
 
 <div class="game">
-  <h1>RETRO PONG</h1>
+  <h1>PinKiPonKi</h1>
 
   <div class="score">
-    <span>YOU: <b id="playerScore">0</b></span>
-    <span>CPU: <b id="cpuScore">0</b></span>
+    <span>SINÄ: <b id="playerScore">0</b></span>
+    <span>KARI: <b id="cpuScore">0</b></span>
   </div>
 
   <div class="arena">
@@ -116,16 +116,16 @@ button:hover {
     </div>
 
     <div class="overlay hidden" id="endMenu">
-      <h2 id="result">GAME OVER</h2>
-      <button id="restartBtn">PLAY AGAIN</button>
+      <h2 id="result">HÄVISIT PELIN</h2>
+      <button id="restartBtn">PELAA UUDESTAAN</button>
     </div>
   </div>
 
   <p class="info">
-    MOVE: W / S OR ↑ / ↓<br>
-    YOU CAN ALSO USE YOUR MOUSE OR FINGER
+    LIIKUTA MAILAA: W / S<br>
+    VOIT MYÖS LIIKKUA HIIRELLÄ TAI SORMELLA
   </p>
-  <button id="resetBtn">RESTART</button>
+  <button id="resetBtn">UUDELLEEN</button>
 </div>
 
 <script>
@@ -274,7 +274,7 @@ function pointScored() {
   if (player.score >= 5 || cpu.score >= 5) {
     running = false;
     document.getElementById("result").textContent =
-      player.score >= 5 ? "YOU WIN!" : "CPU WINS!";
+      player.score >= 5 ? "VOITIT PELIN" : "KARI VOITTI";
     endMenu.classList.remove("hidden");
   }
 }
